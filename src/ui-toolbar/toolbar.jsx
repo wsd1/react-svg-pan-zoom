@@ -1,20 +1,30 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT,
+  TOOL_AUTO, 
+  //TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, 
+  TOOL_SELECT, TOOL_CUT,
   POSITION_TOP, POSITION_RIGHT, POSITION_BOTTOM, POSITION_LEFT,
   ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT, ALIGN_TOP, ALIGN_BOTTOM,
 } from '../constants';
 
 import {fitToViewer} from '../features/zoom';
 import IconCursor from './icon-cursor';
-import IconPan from './icon-pan';
-import IconZoomIn from './icon-zoom-in';
-import IconZoomOut from './icon-zoom-out';
+//import IconPan from './icon-pan';
+//import IconZoomIn from './icon-zoom-in';
+//import IconZoomOut from './icon-zoom-out';
 import IconFit from './icon-fit';
+import IconSelect from './icon-select';
+import IconSave from './icon-save';
+import IconDelete from './icon-delete';
+import IconLayer from './icon-layer';
+import IconCut from './icon-cut';
+import IconRedo from './icon-redo';
+import IconUndo from './icon-undo';
 import ToolbarButton from './toolbar-button';
+import ToolbarPadding from './toolbar-padding';
 
-export default function Toolbar({tool, value, onChangeValue, onChangeTool, activeToolColor, position, SVGAlignX, SVGAlignY}) {
+export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onLayerSet, activeToolColor, position, SVGAlignX, SVGAlignY}) {
 
   let handleChangeTool = (event, tool) => {
     onChangeTool(tool);
@@ -24,6 +34,37 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, activ
 
   let handleFit = event => {
     onChangeValue(fitToViewer(value, SVGAlignX, SVGAlignY));
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  let handleSave = event => {
+    onSave(tool, value);
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  let handleUndo = event => {
+    onUndo();
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  let handleRedo = event => {
+    onRedo();
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  let handleDelete = event => {
+    onDelete();
+    event.stopPropagation();
+    event.preventDefault();
+  };
+  
+
+  let handleLayer = event => {
+    onLayerSet(event);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -49,15 +90,116 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, activ
 
   return (
     <div style={style} role="toolbar">
+
       <ToolbarButton
         toolbarPosition={position}
-        active={tool === TOOL_NONE}
+        active={false}
+        activeColor={activeToolColor}
+        name="save"
+        title="save"
+        onClick={ event => handleSave(event) }>
+        <IconSave/>
+      </ToolbarButton>
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="fit-to-viewer"
+        title="Fit to viewer"
+        onClick={ event => handleFit(event) }>
+        <IconFit/>
+      </ToolbarButton>
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="undo"
+        title="undo"
+        onClick={ event => handleUndo(event) }>
+        <IconUndo/>
+      </ToolbarButton>
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="redo"
+        title="redo"
+        onClick={ event => handleRedo(event) }>
+        <IconRedo/>
+      </ToolbarButton>
+
+      <ToolbarPadding toolbarPosition={position} />
+
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={tool === TOOL_AUTO}
         activeColor={activeToolColor}
         name="unselect-tools"
-        title="Selection"
-        onClick={ event => handleChangeTool(event, TOOL_NONE) }>
+        title="Auto"
+        onClick={ event => handleChangeTool(event, TOOL_AUTO) }>
         <IconCursor/>
       </ToolbarButton>
+
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={tool === TOOL_SELECT}
+        activeColor={activeToolColor}
+        name="select-tool-select"
+        title="Select"
+        onClick={ event => handleChangeTool(event, TOOL_SELECT) }>
+        <IconSelect/>
+      </ToolbarButton>
+
+      <ToolbarPadding toolbarPosition={position} />
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={tool === TOOL_CUT}
+        activeColor={activeToolColor}
+        name="break-line"
+        title="break line"
+        onClick={ event => handleChangeTool(event, TOOL_CUT) }>
+        <IconCut/>
+      </ToolbarButton>
+
+      <ToolbarPadding toolbarPosition={position} />
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="delete"
+        title="delete"
+        onClick={ event => handleDelete(event) }>
+        <IconDelete/>
+      </ToolbarButton>
+
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="set layer"
+        title="set layer"
+        onClick={ event => handleLayer(event) }>
+        <IconLayer/>
+      </ToolbarButton>
+
+
+
+
+    </div>
+  )
+}
+
+/*
+
+
 
       <ToolbarButton
         toolbarPosition={position}
@@ -89,18 +231,7 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, activ
         <IconZoomOut/>
       </ToolbarButton>
 
-      <ToolbarButton
-        toolbarPosition={position}
-        active={false}
-        activeColor={activeToolColor}
-        name="fit-to-viewer"
-        title="Fit to viewer"
-        onClick={ event => handleFit(event) }>
-        <IconFit/>
-      </ToolbarButton>
-    </div>
-  )
-}
+*/
 
 Toolbar.propTypes = {
   tool: PropTypes.string.isRequired,

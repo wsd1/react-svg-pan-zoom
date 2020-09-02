@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {toSVG} from 'transformation-matrix';
+import { toSVG } from 'transformation-matrix';
 //events
 import eventFactory from './events/event-factory';
 //features
-import {pan} from './features/pan';
+import { pan } from './features/pan';
 import {
   getDefaultValue,
   isValueValid,
@@ -24,10 +24,10 @@ import {
   onWheel
 } from './features/interactions';
 import parseViewBox from './utils/parseViewBox';
-import {onTouchCancel, onTouchEnd, onTouchMove, onTouchStart} from './features/interactions-touch';
+import { onTouchCancel, onTouchEnd, onTouchMove, onTouchStart } from './features/interactions-touch';
 
-import {fitSelection, fitToViewer, zoom, zoomOnViewerCenter} from './features/zoom';
-import {closeMiniature, openMiniature} from './features/miniature';
+import { fitSelection, fitToViewer, zoom, zoomOnViewerCenter } from './features/zoom';
+import { closeMiniature, openMiniature } from './features/miniature';
 //ui
 import cursorPolyfill from './ui/cursor-polyfill';
 import BorderGradient from './ui/border-gradient';
@@ -47,6 +47,7 @@ import {
   MODE_IDLE,
   MODE_PANNING,
   MODE_ZOOMING,
+  MODE_SELECTING,
   POSITION_BOTTOM,
   POSITION_LEFT,
   POSITION_NONE,
@@ -56,21 +57,23 @@ import {
   TOOL_NONE,
   TOOL_PAN,
   TOOL_ZOOM_IN,
-  TOOL_ZOOM_OUT
+  TOOL_ZOOM_OUT,
+  TOOL_SELECT,
+  TOOL_CUT
 } from './constants';
-import {printMigrationTipsRelatedToProps} from "./migration-tips";
+import { printMigrationTipsRelatedToProps } from "./migration-tips";
 
 export default class ReactSVGPanZoom extends React.Component {
 
   constructor(props, context) {
-    const {width: viewerWidth, height: viewerHeight, scaleFactorMin, scaleFactorMax, children} = props;
-    const {viewBox: SVGViewBox} = children.props;
+    const { width: viewerWidth, height: viewerHeight, scaleFactorMin, scaleFactorMax, children } = props;
+    const { viewBox: SVGViewBox } = children.props;
     let defaultValue;
     if (SVGViewBox) {
       const [SVGMinX, SVGMinY, SVGWidth, SVGHeight] = parseViewBox(SVGViewBox);
       defaultValue = getDefaultValue(viewerWidth, viewerHeight, SVGMinX, SVGMinY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
     } else {
-      const {width: SVGWidth, height: SVGHeight} = children.props;
+      const { width: SVGWidth, height: SVGHeight } = children.props;
       defaultValue = getDefaultValue(viewerWidth, viewerHeight, 0, 0, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
     }
 
@@ -102,18 +105,18 @@ export default class ReactSVGPanZoom extends React.Component {
     }
 
     // This block checks the size of the SVG
-    const {viewBox: SVGViewBox} = props.children.props;
+    const { viewBox: SVGViewBox } = props.children.props;
     if (SVGViewBox) {
       // if the viewBox prop is specified
       const [x, y, width, height] = parseViewBox(SVGViewBox);
 
-      if(value.SVGMinX !== x || value.SVGMinY !== y || value.SVGWidth !== width || value.SVGHeight !== height) {
+      if (value.SVGMinX !== x || value.SVGMinY !== y || value.SVGWidth !== width || value.SVGHeight !== height) {
         nextValue = setSVGViewBox(nextValue, x, y, width, height);
         needUpdate = true;
       }
     } else {
       // if the width and height props are specified
-      const {width: SVGWidth, height: SVGHeight} = props.children.props;
+      const { width: SVGWidth, height: SVGHeight } = props.children.props;
       if (value.SVGWidth !== SVGWidth || value.SVGHeight !== SVGHeight) {
         nextValue = setSVGViewBox(nextValue, 0, 0, SVGWidth, SVGHeight);
         needUpdate = true;
@@ -144,6 +147,21 @@ export default class ReactSVGPanZoom extends React.Component {
   }
 
   componentDidMount() {
+
+
+    //ws_d1: 保存功能可以存储 editor 的 value。在load恢复时，直接setValue，可能会出现 value中‘viewerWidth、viewerHeight’
+    //与实际svg width height不符合的情况。因此在mount的时机，加入value与prop的比对，以修正这个情况
+    // ----- change 开始  
+    const value = this.getValue();
+    const props = this.props
+    let nextValue = value;
+    if (props.width !== value.viewerWidth ||
+      props.height !== value.viewerHeight) {
+      nextValue = setViewerSize(nextValue, props.width, props.height);
+      this.setValue(nextValue);
+    }
+    // ----- change end
+
     this.autoPanIsRunning = true;
     requestAnimationFrame(this.autoPanLoop);
     this.ViewerDOM.addEventListener('wheel', this.onWheel, false);
@@ -166,7 +184,7 @@ export default class ReactSVGPanZoom extends React.Component {
   }
 
   setValue(nextValue) {
-    let {onChangeValue, onZoom, onPan} = this.props;
+    let { onChangeValue, onZoom, onPan } = this.props;
 
     if (onChangeValue) onChangeValue(nextValue);
     if (nextValue.lastAction) {
@@ -223,9 +241,9 @@ export default class ReactSVGPanZoom extends React.Component {
 
   /** ReactSVGPanZoom internals **/
   handleViewerEvent(event) {
-    let {props, ViewerDOM} = this;
+    let { props, ViewerDOM } = this;
 
-    if (!([TOOL_NONE, TOOL_AUTO].indexOf(this.getTool()) >= 0)) return;
+    if (!([TOOL_NONE, TOOL_AUTO, TOOL_SELECT, TOOL_CUT].indexOf(this.getTool()) >= 0)) return;
     if (event.target === ViewerDOM) return;
 
     let eventsHandler = {
@@ -245,11 +263,11 @@ export default class ReactSVGPanZoom extends React.Component {
     let onEventHandler = eventsHandler[event.type];
     if (!onEventHandler) return;
 
-    onEventHandler(eventFactory(event, props.value, ViewerDOM));
+    onEventHandler(eventFactory(event, props.value, ViewerDOM), this.getTool());
   }
 
   autoPanLoop() {
-    let coords = {x: this.state.pointerX, y: this.state.pointerY};
+    let coords = { x: this.state.pointerX, y: this.state.pointerY };
     let nextValue = onInterval(null, this.ViewerDOM, this.getTool(), this.getValue(), this.props, coords);
     if (this.getValue() !== nextValue) {
       this.setValue(nextValue);
@@ -267,10 +285,10 @@ export default class ReactSVGPanZoom extends React.Component {
 
   /** React renderer **/
   render() {
-    let {props, state: {pointerX, pointerY}} = this;
+    let { props, state: { pointerX, pointerY } } = this;
     let tool = this.getTool();
     let value = this.getValue();
-    let {customToolbar: CustomToolbar, customMiniature: CustomMiniature} = props;
+    let { customToolbar: CustomToolbar, customMiniature: CustomMiniature } = props;
 
     let panningWithToolAuto = tool === TOOL_AUTO
       && value.mode === MODE_PANNING
@@ -288,19 +306,23 @@ export default class ReactSVGPanZoom extends React.Component {
     if (tool === TOOL_ZOOM_OUT)
       cursor = cursorPolyfill('zoom-out');
 
+    if (tool === TOOL_SELECT || tool === TOOL_CUT)
+      cursor = cursorPolyfill('crosshair');
+
     if (panningWithToolAuto)
       cursor = cursorPolyfill('grabbing');
 
+    //, TOOL_SELECT, TOOL_CUT
     let blockChildEvents = [TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT].indexOf(tool) >= 0;
     blockChildEvents = blockChildEvents || panningWithToolAuto;
 
     const touchAction = (this.props.detectPinchGesture || [TOOL_PAN, TOOL_AUTO].indexOf(this.getTool()) !== -1) ? 'none' : undefined
 
-    const style = {display: 'block', cursor, touchAction};
+    const style = { display: 'block', cursor, touchAction };
 
     return (
       <div
-        style={{position: "relative", width: value.viewerWidth, height: value.viewerHeight, ...props.style}}
+        style={{ position: "relative", width: value.viewerWidth, height: value.viewerHeight, ...props.style }}
         className={this.props.className}>
         <svg
           ref={ViewerDOM => this.ViewerDOM = ViewerDOM}
@@ -314,13 +336,13 @@ export default class ReactSVGPanZoom extends React.Component {
             this.handleViewerEvent(event);
           }}
           onMouseMove={event => {
-            let {left, top} = this.ViewerDOM.getBoundingClientRect();
+            let { left, top } = this.ViewerDOM.getBoundingClientRect();
             let x = event.clientX - Math.round(left);
             let y = event.clientY - Math.round(top);
 
-            let nextValue = onMouseMove(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props, {x, y});
+            let nextValue = onMouseMove(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props, { x, y });
             if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.setState({pointerX: x, pointerY: y});
+            this.setState({ pointerX: x, pointerY: y });
             this.handleViewerEvent(event);
           }}
           onMouseUp={event => {
@@ -332,6 +354,7 @@ export default class ReactSVGPanZoom extends React.Component {
           onClick={event => {
             this.handleViewerEvent(event)
           }}
+
           onDoubleClick={event => {
             let nextValue = onDoubleClick(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
             if (this.getValue() !== nextValue) this.setValue(nextValue);
@@ -375,47 +398,51 @@ export default class ReactSVGPanZoom extends React.Component {
             y={0}
             width={value.viewerWidth}
             height={value.viewerHeight}
-            style={{pointerEvents: "none"}}
+            style={{ pointerEvents: "none" }}
           />
 
           <g
             transform={toSVG(value)}
-            style={blockChildEvents ? {pointerEvents: "none"} : {}}>
+            style={blockChildEvents ? { pointerEvents: "none" } : {}}>
             <rect
               fill={this.props.SVGBackground}
               style={this.props.SVGStyle}
               x={value.SVGMinX || 0}
               y={value.SVGMinY || 0}
               width={value.SVGWidth}
-              height={value.SVGHeight}/>
+              height={value.SVGHeight} />
             <g>
               {props.children.props.children}
             </g>
           </g>
 
           {!([TOOL_NONE, TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan && value.focus) ? null : (
-            <g style={{pointerEvents: "none"}}>
+            <g style={{ pointerEvents: "none" }}>
               {!(pointerY <= 20) ? null :
-                <BorderGradient direction={POSITION_TOP} width={value.viewerWidth} height={value.viewerHeight}/>
+                <BorderGradient direction={POSITION_TOP} width={value.viewerWidth} height={value.viewerHeight} />
               }
 
               {!(value.viewerWidth - pointerX <= 20) ? null :
-                <BorderGradient direction={POSITION_RIGHT} width={value.viewerWidth} height={value.viewerHeight}/>
+                <BorderGradient direction={POSITION_RIGHT} width={value.viewerWidth} height={value.viewerHeight} />
               }
 
               {!(value.viewerHeight - pointerY <= 20) ? null :
-                <BorderGradient direction={POSITION_BOTTOM} width={value.viewerWidth} height={value.viewerHeight}/>
+                <BorderGradient direction={POSITION_BOTTOM} width={value.viewerWidth} height={value.viewerHeight} />
               }
 
               {!(value.focus && pointerX <= 20) ? null :
-                <BorderGradient direction={POSITION_LEFT} width={value.viewerWidth} height={value.viewerHeight}/>
+                <BorderGradient direction={POSITION_LEFT} width={value.viewerWidth} height={value.viewerHeight} />
               }
             </g>
           )}
 
-          {!(value.mode === MODE_ZOOMING) ? null :
-            <Selection startX={value.startX} startY={value.startY} endX={value.endX} endY={value.endY}/>
+          {!(value.mode === MODE_ZOOMING || value.mode === MODE_SELECTING) ? null :
+            <Selection startX={value.startX} startY={value.startY} endX={value.endX} endY={value.endY} />
           }
+
+
+
+
         </svg>
 
         {props.toolbarProps.position === POSITION_NONE ? null :
@@ -457,7 +484,7 @@ ReactSVGPanZoom.propTypes = {
     PropTypes.object,
     PropTypes.shape({
       version: PropTypes.oneOf([2]).isRequired,
-      mode: PropTypes.oneOf([MODE_IDLE, MODE_PANNING, MODE_ZOOMING]).isRequired,
+      mode: PropTypes.oneOf([MODE_IDLE, MODE_PANNING, MODE_ZOOMING, MODE_SELECTING]).isRequired,
       focus: PropTypes.bool.isRequired,
       a: PropTypes.number.isRequired,
       b: PropTypes.number.isRequired,
@@ -482,8 +509,8 @@ ReactSVGPanZoom.propTypes = {
   //handler something changed
   onChangeValue: PropTypes.func.isRequired,
 
-  //current active tool (TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT)
-  tool: PropTypes.oneOf([TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT]).isRequired,
+  //current active tool (TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, TOOL_SELECT, TOOL_CUT)
+  tool: PropTypes.oneOf([TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, TOOL_SELECT, TOOL_CUT]).isRequired,
 
   //handler tool changed
   onChangeTool: PropTypes.func.isRequired,

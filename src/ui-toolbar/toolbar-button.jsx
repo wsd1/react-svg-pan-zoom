@@ -32,8 +32,8 @@ export default class ToolbarButton extends React.Component {
   render() {
     let style = {
       display: "block",
-      width: "24px",
-      height: "24px",
+      width: "40px",
+      height: "40px",
       margin: [POSITION_TOP, POSITION_BOTTOM].indexOf(this.props.toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
       color: this.props.active || this.state.hover ? this.props.activeColor : '#FFF',
       transition: "color 200ms ease",

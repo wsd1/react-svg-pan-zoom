@@ -207,6 +207,7 @@ export function startZooming(value, viewerX, viewerY) {
   });
 }
 
+
 export function updateZooming(value, viewerX, viewerY) {
   if (value.mode !== MODE_ZOOMING) throw new Error('update selection not allowed in this mode ' + value.mode);
 

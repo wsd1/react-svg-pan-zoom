@@ -1,18 +1,22 @@
-import {MODE_PANNING, MODE_ZOOMING, TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT,} from '../constants';
-import {getSVGPoint, setFocus} from './common';
-import {autoPanIfNeeded, startPanning, stopPanning, updatePanning} from './pan';
-import {startZooming, stopZooming, updateZooming, zoom} from './zoom';
+import { MODE_PANNING, MODE_ZOOMING, MODE_SELECTING, TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, TOOL_SELECT
+  //, TOOL_CUT 
+} from '../constants';
+import { getSVGPoint, setFocus } from './common';
+import { autoPanIfNeeded, startPanning, stopPanning, updatePanning } from './pan';
+import { startZooming, stopZooming, updateZooming, zoom } from './zoom';
+import { startSelecting, stopSelecting, updateSelecting } from './select';
+
 import mapRange from '../utils/mapRange';
 
 export function getMousePosition(event, ViewerDOM) {
-  let {left, top} = ViewerDOM.getBoundingClientRect();
+  let { left, top } = ViewerDOM.getBoundingClientRect();
   let x = event.clientX - Math.round(left);
   let y = event.clientY - Math.round(top);
-  return {x, y}
+  return { x, y }
 }
 
 export function onMouseDown(event, ViewerDOM, tool, value, props, coords = null) {
-  const {x, y} = coords || getMousePosition(event, ViewerDOM)
+  const { x, y } = coords || getMousePosition(event, ViewerDOM)
 
   let nextValue = value;
 
@@ -24,6 +28,10 @@ export function onMouseDown(event, ViewerDOM, tool, value, props, coords = null)
 
     case TOOL_ZOOM_IN:
       nextValue = startZooming(value, x, y);
+      break;
+
+    case TOOL_SELECT:
+      nextValue = startSelecting(value, x, y);
       break;
 
     case TOOL_AUTO:
@@ -40,7 +48,7 @@ export function onMouseDown(event, ViewerDOM, tool, value, props, coords = null)
 }
 
 export function onMouseMove(event, ViewerDOM, tool, value, props, coords = null) {
-  const {x, y} = coords || getMousePosition(event, ViewerDOM)
+  const { x, y } = coords || getMousePosition(event, ViewerDOM)
 
   let forceExit = (event.buttons === 0); //the mouse exited and reentered into svg
   let nextValue = value;
@@ -50,7 +58,10 @@ export function onMouseMove(event, ViewerDOM, tool, value, props, coords = null)
       if (value.mode === MODE_ZOOMING)
         nextValue = forceExit ? stopZooming(value, x, y, props.scaleFactor, props) : updateZooming(value, x, y);
       break;
-
+    case TOOL_SELECT:
+      if (value.mode === MODE_SELECTING)
+        nextValue = forceExit ? stopSelecting(value, x, y, props) : updateSelecting(value, x, y);
+      break;
     case TOOL_AUTO:
     case TOOL_PAN:
       if (value.mode === MODE_PANNING)
@@ -66,7 +77,7 @@ export function onMouseMove(event, ViewerDOM, tool, value, props, coords = null)
 }
 
 export function onMouseUp(event, ViewerDOM, tool, value, props, coords = null) {
-  const {x, y} = coords || getMousePosition(event, ViewerDOM)
+  const { x, y } = coords || getMousePosition(event, ViewerDOM)
 
   let nextValue = value;
 
@@ -79,6 +90,11 @@ export function onMouseUp(event, ViewerDOM, tool, value, props, coords = null) {
     case TOOL_ZOOM_IN:
       if (value.mode === MODE_ZOOMING)
         nextValue = stopZooming(value, x, y, props.scaleFactor, props);
+      break;
+
+    case TOOL_SELECT:
+      if (value.mode === MODE_SELECTING)
+        nextValue = stopSelecting(value, x, y, props);
       break;
 
     case TOOL_AUTO:
@@ -96,12 +112,12 @@ export function onMouseUp(event, ViewerDOM, tool, value, props, coords = null) {
 }
 
 export function onDoubleClick(event, ViewerDOM, tool, value, props, coords = null) {
-  const {x, y} = coords || getMousePosition(event, ViewerDOM)
+  const { x, y } = coords || getMousePosition(event, ViewerDOM)
 
   let nextValue = value;
 
   if (tool === TOOL_AUTO && !props.disableDoubleClickZoomWithToolAuto) {
-    const {modifierKeys = []} = props;
+    const { modifierKeys = [] } = props;
     let SVGPoint = getSVGPoint(value, x, y);
     let modifierKeysReducer = (current, modifierKey) => current || event.getModifierState(modifierKey);
     let modifierKeyActive = modifierKeys.reduce(modifierKeysReducer, false);
@@ -114,7 +130,7 @@ export function onDoubleClick(event, ViewerDOM, tool, value, props, coords = nul
 }
 
 export function onWheel(event, ViewerDOM, tool, value, props, coords = null) {
-  const {x, y} = coords || getMousePosition(event, ViewerDOM)
+  const { x, y } = coords || getMousePosition(event, ViewerDOM)
 
   if (!props.detectWheel) return value;
 
@@ -136,7 +152,7 @@ export function onMouseEnterOrLeave(event, ViewerDOM, tool, value, props, coords
 }
 
 export function onInterval(event, ViewerDOM, tool, value, props, coords = null) {
-  let {x, y} = coords;
+  let { x, y } = coords;
 
   if (!([TOOL_NONE, TOOL_AUTO].indexOf(tool) >= 0)) return value;
   if (!props.detectAutoPan) return value;
