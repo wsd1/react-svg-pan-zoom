@@ -1,4 +1,4 @@
-# react-svg-pan-zoom
+# react-svg-pan-zoom-custom
 ---
 
 
@@ -7,24 +7,29 @@
 
 相关项目：
 
-contor-reviewer     :   react based app.
+shape-reviewer-v1   :   react based app.
 react-svg-pan-zoom  :   修改过的 react UI component.
 contorWorker        :   web thread. 所有线条管理和算法
 
-重构前第一版相关项目：
-
-svg-reviewer, blueprintWorker
 
 ## 使用大致说明
 
-只需要在 props中加入 onSelect(start, end) 回调函数，可以对选择框行为作出相应。其参数 表示选择的起点和终点
+在 props 中加入 onSelect(start, end) 回调函数，可以对选择框行为作出相应。其参数 表示选择的起点和终点
 
 在 toolbarProps 中添加三个回调，可以响应 保存、删除、和 层选择三个按钮被点击的事件。
 
-toolbarProps:{ onSave, onDelete, onLayerSet }
+toolbarProps:{ onSave, onDelete, onLayerSet, onUndo, onRedo }
 
-详见 contor-reviewer项目中 mainView.js中的使用细节。
+详见 shape-reviewer-v1 项目中 mainView.js中的使用细节。
 
+## 编译 
+
+    yarn run build
+
+
+
+----
+以下是原 README
 
 **react-svg-pan-zoom** is a React component that adds **pan** and **zoom** features to the **SVG images**. It helps to display big SVG images in a small space.
 
