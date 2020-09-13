@@ -8,17 +8,15 @@
 相关项目：
 
 shape-reviewer-v1   :   react based app.
-react-svg-pan-zoom  :   修改过的 react UI component.
-contorWorker        :   web thread. 所有线条管理和算法
 
 
 ## 使用大致说明
 
 在 props 中加入 onSelect(start, end) 回调函数，可以对选择框行为作出相应。其参数 表示选择的起点和终点
 
-在 toolbarProps 中添加三个回调，可以响应 保存、删除、和 层选择三个按钮被点击的事件。
+在 toolbarProps 中添加三个回调，可以响应 保存、删除、和 边框设定 三个按钮被点击的事件。
 
-toolbarProps:{ onSave, onDelete, onLayerSet, onUndo, onRedo }
+toolbarProps:{ onSave, onDelete, onBorderSet, onUndo, onRedo }
 
 详见 shape-reviewer-v1 项目中 mainView.js中的使用细节。
 

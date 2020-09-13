@@ -17,14 +17,14 @@ import IconFit from './icon-fit';
 import IconSelect from './icon-select';
 import IconSave from './icon-save';
 import IconDelete from './icon-delete';
-import IconLayer from './icon-layer';
+import IconBorder from './icon-border';
 import IconCut from './icon-cut';
 import IconRedo from './icon-redo';
 import IconUndo from './icon-undo';
 import ToolbarButton from './toolbar-button';
 import ToolbarPadding from './toolbar-padding';
 
-export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onLayerSet, activeToolColor, position, SVGAlignX, SVGAlignY}) {
+export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, activeToolColor, position, SVGAlignX, SVGAlignY}) {
 
   let handleChangeTool = (event, tool) => {
     onChangeTool(tool);
@@ -63,8 +63,8 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
   };
   
 
-  let handleLayer = event => {
-    onLayerSet(event);
+  let handleBorder = event => {
+    onBorderSet(event);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -184,10 +184,10 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
         toolbarPosition={position}
         active={false}
         activeColor={activeToolColor}
-        name="set layer"
-        title="set layer"
-        onClick={ event => handleLayer(event) }>
-        <IconLayer/>
+        name="set border"
+        title="set border"
+        onClick={ event => handleBorder(event) }>
+        <IconBorder/>
       </ToolbarButton>
 
 
