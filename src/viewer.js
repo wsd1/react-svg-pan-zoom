@@ -14,6 +14,7 @@ import {
   setViewerSize,
   setZoomLevels
 } from './features/common';
+
 import {
   onDoubleClick,
   onInterval,

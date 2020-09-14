@@ -21,10 +21,11 @@ import IconBorder from './icon-border';
 import IconCut from './icon-cut';
 import IconRedo from './icon-redo';
 import IconUndo from './icon-undo';
+import IconHelp from './icon-help';
 import ToolbarButton from './toolbar-button';
 import ToolbarPadding from './toolbar-padding';
 
-export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, activeToolColor, position, SVGAlignX, SVGAlignY}) {
+export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, onHelp, activeToolColor, position, SVGAlignX, SVGAlignY}) {
 
   let handleChangeTool = (event, tool) => {
     onChangeTool(tool);
@@ -65,6 +66,12 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
 
   let handleBorder = event => {
     onBorderSet(event);
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  let handleHelp = event => {
+    onHelp(event);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -190,7 +197,18 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
         <IconBorder/>
       </ToolbarButton>
 
+      <ToolbarPadding toolbarPosition={position} />
 
+
+      <ToolbarButton
+        toolbarPosition={position}
+        active={false}
+        activeColor={activeToolColor}
+        name="help"
+        title="help"
+        onClick={ event => handleHelp(event) }>
+        <IconHelp/>
+      </ToolbarButton>
 
 
     </div>
