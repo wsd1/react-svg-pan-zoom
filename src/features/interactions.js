@@ -1,5 +1,6 @@
-import { MODE_PANNING, MODE_ZOOMING, MODE_SELECTING, TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, TOOL_SELECT
-  //, TOOL_CUT 
+import {
+  MODE_PANNING, MODE_ZOOMING, MODE_SELECTING, TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, TOOL_SELECT
+  , TOOL_CUT
 } from '../constants';
 import { getSVGPoint, setFocus } from './common';
 import { autoPanIfNeeded, startPanning, stopPanning, updatePanning } from './pan';
@@ -31,13 +32,23 @@ export function onMouseDown(event, ViewerDOM, tool, value, props, coords = null)
       break;
 
     case TOOL_SELECT:
-      nextValue = startSelecting(value, x, y);
+      if (event.button === 0)//左键拖拽开始
+        nextValue = startSelecting(value, x, y);
+      else if (event.button === 1)//中键拖拽开始
+        nextValue = startPanning(value, x, y);
       break;
 
     case TOOL_AUTO:
     case TOOL_PAN:
       nextValue = startPanning(value, x, y);
       break;
+
+    case TOOL_CUT:
+      if (event.button === 1)//中键拖拽开始
+        nextValue = startPanning(value, x, y);
+      break;
+
+
 
     default:
       return value;
@@ -58,15 +69,29 @@ export function onMouseMove(event, ViewerDOM, tool, value, props, coords = null)
       if (value.mode === MODE_ZOOMING)
         nextValue = forceExit ? stopZooming(value, x, y, props.scaleFactor, props) : updateZooming(value, x, y);
       break;
+
     case TOOL_SELECT:
       if (value.mode === MODE_SELECTING)
         nextValue = forceExit ? stopSelecting(value, x, y, props) : updateSelecting(value, x, y);
+
+      //select工具也可能中键拖拽 所以看下是否是在 panning
+      else if (value.mode === MODE_PANNING)
+        nextValue = forceExit ? stopPanning(value) : updatePanning(value, x, y, props.preventPanOutside ? 20 : undefined);
+
       break;
+
     case TOOL_AUTO:
     case TOOL_PAN:
       if (value.mode === MODE_PANNING)
         nextValue = forceExit ? stopPanning(value) : updatePanning(value, x, y, props.preventPanOutside ? 20 : undefined);
       break;
+
+    case TOOL_CUT:
+      //cut 工具也可能中键拖拽 所以看下是否是在 panning
+      if (value.mode === MODE_PANNING)
+        nextValue = forceExit ? stopPanning(value) : updatePanning(value, x, y, props.preventPanOutside ? 20 : undefined);
+      break;
+
 
     default:
       return value;
@@ -95,6 +120,8 @@ export function onMouseUp(event, ViewerDOM, tool, value, props, coords = null) {
     case TOOL_SELECT:
       if (value.mode === MODE_SELECTING)
         nextValue = stopSelecting(value, x, y, props);
+      else if (value.mode === MODE_PANNING)
+        nextValue = stopPanning(value);
       break;
 
     case TOOL_AUTO:
@@ -102,6 +129,13 @@ export function onMouseUp(event, ViewerDOM, tool, value, props, coords = null) {
       if (value.mode === MODE_PANNING)
         nextValue = stopPanning(value);
       break;
+
+    case TOOL_CUT:
+      //cut 工具也可能中键拖拽 所以看下是否是在 panning
+      if (value.mode === MODE_PANNING)
+        nextValue = stopPanning(value);
+      break;
+
 
     default:
       return value;

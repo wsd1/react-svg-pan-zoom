@@ -174,7 +174,7 @@ export default class ReactSVGPanZoom extends React.Component {
       needUpdate = true;
     }
 
-    if(needUpdate)
+    if (needUpdate)
       this.setValue(nextValue);
 
 
@@ -350,11 +350,19 @@ export default class ReactSVGPanZoom extends React.Component {
           style={style}
 
           onMouseDown={event => {
+
+            //console.log(`dn which:${event.which} button:${event.button} buttons:${event.buttons}`);
+
             let nextValue = onMouseDown(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
             if (this.getValue() !== nextValue) this.setValue(nextValue);
+
             this.handleViewerEvent(event);
           }}
           onMouseMove={event => {
+
+            //console.log(`mv which:${event.which} button:${event.button} buttons:${event.buttons}`);
+
+
             let { left, top } = this.ViewerDOM.getBoundingClientRect();
             let x = event.clientX - Math.round(left);
             let y = event.clientY - Math.round(top);
@@ -365,6 +373,9 @@ export default class ReactSVGPanZoom extends React.Component {
             this.handleViewerEvent(event);
           }}
           onMouseUp={event => {
+            
+            //console.log(`up which:${event.which} button:${event.button} buttons:${event.buttons}`);
+
             let nextValue = onMouseUp(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
             if (this.getValue() !== nextValue) this.setValue(nextValue);
             this.handleViewerEvent(event);

@@ -22,8 +22,14 @@ toolbarProps:{ onSave, onDelete, onBorderSet, onUndo, onRedo }
 
 ## 编译 
 
-    yarn run build
+    yarn run library:build:commonjs
 
+## 鼠标按键详解
+
+左中右三键 
+按下 event中 button分别为 0 1 2
+松开 event中 button分别为 0 1 2
+buttons为掩码，左中右分别对应 1 4 2，鼠标事件中 buttons为其相应按下按键的码和。
 
 
 ----
