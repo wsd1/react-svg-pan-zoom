@@ -77,6 +77,8 @@ export default class ReactSVGPanZoom extends React.Component {
       const { width: SVGWidth, height: SVGHeight } = children.props;
       defaultValue = getDefaultValue(viewerWidth, viewerHeight, 0, 0, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
     }
+    defaultValue = fitToViewer(defaultValue, ALIGN_CENTER, ALIGN_CENTER)
+
 
     super(props, context);
     this.ViewerDOM = null;
@@ -153,7 +155,7 @@ export default class ReactSVGPanZoom extends React.Component {
     //ws_d1: 保存功能可以存储 editor 的 value。在load恢复时，直接setValue，可能会出现 value中‘viewerWidth、viewerHeight’
     //与实际svg width height不符合的情况。因此在mount的时机，加入value与prop的比对，以修正这个情况
     //别忘了 yarn run library:build:commonjs
-    // ----- change 开始  
+    // ----- change 开始  -----
     const value = this.getValue();
     const props = this.props
     let nextValue = value, needUpdate = false;
@@ -179,7 +181,7 @@ export default class ReactSVGPanZoom extends React.Component {
 
 
 
-    // ----- change end
+    // ----- change end -----
 
     this.autoPanIsRunning = true;
     requestAnimationFrame(this.autoPanLoop);
