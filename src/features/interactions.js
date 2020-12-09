@@ -41,6 +41,7 @@ export function onMouseDown(event, ViewerDOM, tool, value, props, coords = null)
     case TOOL_AUTO:
     case TOOL_PAN:
       nextValue = startPanning(value, x, y);
+      //console.log("startPanning"); //delme
       break;
 
     case TOOL_CUT:
@@ -84,6 +85,8 @@ export function onMouseMove(event, ViewerDOM, tool, value, props, coords = null)
     case TOOL_PAN:
       if (value.mode === MODE_PANNING)
         nextValue = forceExit ? stopPanning(value) : updatePanning(value, x, y, props.preventPanOutside ? 20 : undefined);
+        //console.log(nextValue.mode); //delme
+
       break;
 
     case TOOL_CUT:

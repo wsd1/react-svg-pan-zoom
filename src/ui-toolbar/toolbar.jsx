@@ -25,7 +25,7 @@ import IconHelp from './icon-help';
 import ToolbarButton from './toolbar-button';
 import ToolbarPadding from './toolbar-padding';
 
-export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, onHelp, activeToolColor, position, SVGAlignX, SVGAlignY}) {
+export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, onHelp, activeToolColor, position, SVGAlignX, SVGAlignY, isSaved, canUndo, canRedo}) {
 
   let handleChangeTool = (event, tool) => {
     onChangeTool(tool);
@@ -78,11 +78,12 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
 
   let isHorizontal = [POSITION_TOP, POSITION_BOTTOM].indexOf(position) >= 0;
 
+
   let style = {
     //position
     position: "absolute",
     transform: [POSITION_TOP, POSITION_BOTTOM].indexOf(position) >= 0 ? "translate(-50%, 0px)" : "none",
-    top: [POSITION_LEFT, POSITION_RIGHT, POSITION_TOP].indexOf(position) >= 0 ? "5px" : "unset",
+    top: [POSITION_LEFT, POSITION_RIGHT, POSITION_TOP].indexOf(position) >= 0 ? "0px" : "unset", //"5px" 
     left: [POSITION_TOP, POSITION_BOTTOM].indexOf(position) >= 0 ? "50%" : (POSITION_LEFT === position ? "5px" : "unset"),
     right: [POSITION_RIGHT].indexOf(position) >= 0 ? "5px" : "unset",
     bottom: [POSITION_BOTTOM].indexOf(position) >= 0 ? "5px" : "unset",
@@ -101,6 +102,7 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
       <ToolbarButton
         toolbarPosition={position}
         active={false}
+        disabled={isSaved}
         activeColor={activeToolColor}
         name="save"
         title="save"
@@ -121,6 +123,7 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
       <ToolbarButton
         toolbarPosition={position}
         active={false}
+        disabled={!canUndo}
         activeColor={activeToolColor}
         name="undo"
         title="undo"
@@ -131,6 +134,7 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
       <ToolbarButton
         toolbarPosition={position}
         active={false}
+        disabled={!canRedo}
         activeColor={activeToolColor}
         name="redo"
         title="redo"

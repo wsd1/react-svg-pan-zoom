@@ -30,12 +30,15 @@ export default class ToolbarButton extends React.Component {
   }
 
   render() {
+
+    let color = this.props.disabled?'#888':(this.props.active || this.state.hover ? this.props.activeColor : '#FFF')
+
     let style = {
       display: "block",
       width: "40px",
       height: "40px",
       margin: [POSITION_TOP, POSITION_BOTTOM].indexOf(this.props.toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
-      color: this.props.active || this.state.hover ? this.props.activeColor : '#FFF',
+      color,//: this.props.active || this.state.hover ? this.props.activeColor : '#FFF',
       transition: "color 200ms ease",
       background: "none",
       padding: "0px",
@@ -62,6 +65,7 @@ export default class ToolbarButton extends React.Component {
         title={this.props.title}
         name={this.props.name}
         type="button"
+        disabled={this.props.disabled}
       >{this.props.children}</button>
     )
   }
