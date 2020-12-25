@@ -25,7 +25,7 @@ import IconHelp from './icon-help';
 import ToolbarButton from './toolbar-button';
 import ToolbarPadding from './toolbar-padding';
 
-export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, onHelp, activeToolColor, position, SVGAlignX, SVGAlignY, isSaved, canUndo, canRedo}) {
+export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSave, onUndo, onRedo, onDelete, onBorderSet, onHelp, activeToolColor, position, SVGAlignX, SVGAlignY, isSaved, canUndo, canRedo, canDelete}) {
 
   let handleChangeTool = (event, tool) => {
     onChangeTool(tool);
@@ -184,6 +184,7 @@ export default function Toolbar({tool, value, onChangeValue, onChangeTool, onSav
         toolbarPosition={position}
         active={false}
         activeColor={activeToolColor}
+        disabled={!canDelete}
         name="delete"
         title="delete"
         onClick={ event => handleDelete(event) }>

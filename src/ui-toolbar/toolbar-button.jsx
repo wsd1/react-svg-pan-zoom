@@ -32,7 +32,7 @@ export default class ToolbarButton extends React.Component {
   render() {
 
     let color = this.props.disabled?'#888':(this.props.active || this.state.hover ? this.props.activeColor : '#FFF')
-
+    let cursor = this.props.disabled?"auto":"pointer";
     let style = {
       display: "block",
       width: "40px",
@@ -44,7 +44,7 @@ export default class ToolbarButton extends React.Component {
       padding: "0px",
       border: "0px",
       outline: "0px",
-      cursor: "pointer"
+      cursor,//: "pointer"
     };
 
     return (
